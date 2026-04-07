@@ -8,15 +8,105 @@ let
     name = "workspace-athena";
     kind = "workspace-seed";
   };
+
+  profiles = [
+    {
+      name = "athena";
+      description = "Base Athena operator/control-plane profile";
+      default = true;
+      shell = "athena";
+      packages = [
+        "workspace-athena"
+        "athena-activate"
+        "athena-profile-manifest"
+      ];
+      tools = [
+        "git"
+        "jq"
+        "task"
+        "athena-activate"
+      ];
+      skills = [
+        "registry-authoring"
+        "workspace-materialization"
+      ];
+      startupViews = [ "bootstrap" ];
+    }
+  ];
+
+  packages = [
+    {
+      name = "workspace-athena";
+      description = "Store output containing Athena live docs and registry projections";
+      output = "workspace-athena";
+      kind = "projection";
+    }
+    {
+      name = "athena-activate";
+      description = "Store-backed live workspace materialization command";
+      output = "athena-activate";
+      kind = "activation";
+    }
+    {
+      name = "athena-profile-manifest";
+      description = "Manifest projection of Athena profiles, packages, tools, and skills";
+      output = "athena-profile-manifest";
+      kind = "manifest";
+    }
+  ];
+
+  tools = [
+    {
+      name = "git";
+      description = "Version control and repo transport";
+      kind = "cli";
+      package = "git";
+    }
+    {
+      name = "jq";
+      description = "JSON querying for checks and registry inspection";
+      kind = "cli";
+      package = "jq";
+    }
+    {
+      name = "task";
+      description = "Task runner for repo entrypoints";
+      kind = "cli";
+      package = "go-task";
+    }
+    {
+      name = "athena-activate";
+      description = "Live workspace materialization entrypoint";
+      kind = "athena-command";
+      package = "athena-activate";
+    }
+  ];
+
+  skills = [
+    {
+      name = "registry-authoring";
+      description = "Maintain Athena-authored registry truth and projections";
+      portability = "portable";
+      status = "real";
+    }
+    {
+      name = "workspace-materialization";
+      description = "Materialize the Athena live control surface into the workspace root";
+      portability = "portable";
+      status = "real";
+    }
+  ];
+
   effectiveRegistry = import ./registry/effective.nix {
     inherit identity;
     base = baseRegistry;
-    inherit startupViews;
+    inherit startupViews profiles packages tools skills;
   };
+
   baseTaskfiles = import ./taskfiles/base.nix;
 in
 {
-  inherit identity;
+  inherit identity profiles packages tools skills;
 
   registry = {
     types = registryTypes;

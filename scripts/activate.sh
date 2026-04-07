@@ -43,6 +43,7 @@ store_out="$(nix build --print-out-paths .#workspace-athena)"
 
 link_file_with_backup "$store_out/share/athena/seed.json" "seed.json"
 link_file_with_backup "$store_out/share/athena/effective/registry.json" "registry/effective/registry.json"
+link_file_with_backup "$store_out/share/athena/effective/profile-manifest.json" "registry/effective/profile-manifest.json"
 link_file_with_backup "$store_out/share/athena/live/AGENTS.md" "AGENTS.md"
 link_file_with_backup "$store_out/share/athena/live/SOUL.md" "SOUL.md"
 link_file_with_backup "$store_out/share/athena/live/USER.md" "USER.md"
@@ -55,7 +56,8 @@ ls -l \
   "$target/USER.md" \
   "$target/ATHENA.md" \
   "$target/seed.json" \
-  "$target/registry/effective/registry.json"
+  "$target/registry/effective/registry.json" \
+  "$target/registry/effective/profile-manifest.json"
 
 if [ -d "$backup_root" ]; then
   echo "Activated Athena into $target (backup: $backup_root)"

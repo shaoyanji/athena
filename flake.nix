@@ -19,11 +19,19 @@
           pkgs = import nixpkgs { inherit system; };
           athena = import ./nix/default.nix { inherit pkgs; };
           effectiveRegistryJson = builtins.toJSON athena.registry.effective;
+          profileManifestJson = builtins.toJSON {
+            workspace = athena.identity;
+            profiles = athena.profiles;
+            packages = athena.packages;
+            tools = athena.tools;
+            skills = athena.skills;
+          };
           seedJson = builtins.toJSON {
             name = athena.identity.name;
             kind = athena.identity.kind;
             registry = athena.registry.startupViews;
             effectiveRegistry = "share/athena/effective/registry.json";
+            profileManifest = "share/athena/effective/profile-manifest.json";
             taskfiles = athena.taskfiles;
             notes = "Workspace seed only. Canonical task and registry logic lives in Nix.";
           };
@@ -36,6 +44,9 @@
             EOF
             cat > "$out/share/athena/effective/registry.json" <<'EOF'
             ${effectiveRegistryJson}
+            EOF
+            cat > "$out/share/athena/effective/profile-manifest.json" <<'EOF'
+            ${profileManifestJson}
             EOF
 
             install -m 0644 ${./src/AGENTS.md} "$out/share/athena/live/AGENTS.md"
@@ -83,6 +94,7 @@
 
             link_file_with_backup "$store_out/share/athena/seed.json" "seed.json"
             link_file_with_backup "$store_out/share/athena/effective/registry.json" "registry/effective/registry.json"
+            link_file_with_backup "$store_out/share/athena/effective/profile-manifest.json" "registry/effective/profile-manifest.json"
             link_file_with_backup "$store_out/share/athena/live/AGENTS.md" "AGENTS.md"
             link_file_with_backup "$store_out/share/athena/live/SOUL.md" "SOUL.md"
             link_file_with_backup "$store_out/share/athena/live/USER.md" "USER.md"
@@ -95,7 +107,8 @@
               "$target/USER.md" \
               "$target/ATHENA.md" \
               "$target/seed.json" \
-              "$target/registry/effective/registry.json"
+              "$target/registry/effective/registry.json" \
+              "$target/registry/effective/profile-manifest.json"
 
             if [ -d "$backup_root" ]; then
               echo "Activated Athena into $target (backup: $backup_root)"
@@ -104,9 +117,13 @@
             fi
           '';
 
+          athena-profile-manifest = pkgs.runCommand "athena-profile-manifest" { } ''
+            mkdir -p "$out/share/athena/effective"
+            cp "${workspace-athena}/share/athena/effective/profile-manifest.json" "$out/share/athena/effective/profile-manifest.json"
+          '';
+
           default = self.packages.${system}.workspace-athena;
         });
-
 
       checks = forAllSystems (system:
         let
@@ -116,23 +133,25 @@
         {
           registry-contract = pkgs.runCommand "athena-registry-contract-check" { } ''
             registry="${workspaceAthena}/share/athena/effective/registry.json"
+            manifest="${workspaceAthena}/share/athena/effective/profile-manifest.json"
 
             test -f "$registry"
-            test "$(
-              ${pkgs.jq}/bin/jq -r '.workspace.name' "$registry"
-            )" = "workspace-athena"
-            test "$(
-              ${pkgs.jq}/bin/jq -r '.registryVersion' "$registry"
-            )" = "1"
-            test "$(
-              ${pkgs.jq}/bin/jq '.entries | length' "$registry"
-            )" -gt 0
-            test "$(
-              ${pkgs.jq}/bin/jq '.startupViews | length' "$registry"
-            )" -gt 0
-            test "$(
-              ${pkgs.jq}/bin/jq -r '.startupViews[0].name' "$registry"
-            )" = "bootstrap"
+            test "$(${pkgs.jq}/bin/jq -r '.workspace.name' "$registry")" = "workspace-athena"
+            test "$(${pkgs.jq}/bin/jq -r '.registryVersion' "$registry")" = "1"
+            test "$(${pkgs.jq}/bin/jq '.entries | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.startupViews | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq -r '.startupViews[0].name' "$registry")" = "bootstrap"
+            test "$(${pkgs.jq}/bin/jq '.profiles | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.packages | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.tools | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.skills | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq -r '.profiles[0].name' "$registry")" = "athena"
+
+            test -f "$manifest"
+            test "$(${pkgs.jq}/bin/jq -r '.profiles[0].name' "$manifest")" = "athena"
+            test "$(${pkgs.jq}/bin/jq '.packages | length' "$manifest")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.tools | length' "$manifest")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.skills | length' "$manifest")" -gt 0
 
             touch "$out"
           '';
