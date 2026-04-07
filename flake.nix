@@ -18,19 +18,24 @@
         let
           pkgs = import nixpkgs { inherit system; };
           athena = import ./nix/default.nix { inherit pkgs; };
+          effectiveRegistryJson = builtins.toJSON athena.registry.effective;
           seedJson = builtins.toJSON {
             name = athena.identity.name;
             kind = athena.identity.kind;
             registry = athena.registry.startupViews;
+            effectiveRegistry = "share/athena/effective/registry.json";
             taskfiles = athena.taskfiles;
             notes = "Workspace seed only. Canonical task and registry logic lives in Nix.";
           };
         in
         {
           workspace-athena = pkgs.runCommand "workspace-athena" { } ''
-            mkdir -p "$out/share/athena"
+            mkdir -p "$out/share/athena/effective"
             cat > "$out/share/athena/seed.json" <<'EOF'
             ${seedJson}
+            EOF
+            cat > "$out/share/athena/effective/registry.json" <<'EOF'
+            ${effectiveRegistryJson}
             EOF
           '';
 
