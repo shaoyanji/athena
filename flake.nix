@@ -42,6 +42,24 @@
           default = self.packages.${system}.workspace-athena;
         });
 
+      checks = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+          workspaceAthena = self.packages.${system}.workspace-athena;
+        in
+        {
+          registry-contract = pkgs.runCommand "athena-registry-contract-check" { } ''
+            registry="${workspaceAthena}/share/athena/effective/registry.json"
+
+            test -f "$registry"
+            test "$(${pkgs.jq}/bin/jq -r '.workspace.name' "$registry")" = "workspace-athena"
+            test "$(${pkgs.jq}/bin/jq -r '.registryVersion' "$registry")" = "1"
+            test "$(${pkgs.jq}/bin/jq '.entries | length' "$registry")" -gt 0
+
+            touch "$out"
+          '';
+        });
+
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
