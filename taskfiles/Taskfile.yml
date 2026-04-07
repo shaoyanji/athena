@@ -8,3 +8,16 @@ tasks:
     cmds:
       - statix check .
       - deadnix .
+  activate:
+    desc: Materialize Athena into workspace root (canonical flow)
+    cmds:
+      - ../scripts/activate.sh workspace
+
+  activate-repo:
+    desc: Materialize Athena only into this repo
+    cmds:
+      - ../scripts/activate.sh repo
+  check:
+    cmds:
+      - nix flake check
+      - task lint
