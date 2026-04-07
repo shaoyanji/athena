@@ -19,11 +19,19 @@ let
         "workspace-athena"
         "athena-activate"
         "athena-profile-manifest"
+        "nixfmt-rfc-style"
+        "statix"
+        "deadnix"
+        "yq-go"
       ];
       tools = [
         "git"
         "jq"
         "task"
+        "yq"
+        "nixfmt"
+        "statix"
+        "deadnix"
         "athena-activate"
       ];
       skills = [
@@ -53,6 +61,30 @@ let
       output = "athena-profile-manifest";
       kind = "manifest";
     }
+    {
+      name = "nixfmt-rfc-style";
+      description = "Nix formatter used in the Athena dev shell";
+      output = "nixfmt-rfc-style";
+      kind = "cli-support";
+    }
+    {
+      name = "statix";
+      description = "Nix linter used in the Athena dev shell";
+      output = "statix";
+      kind = "cli-support";
+    }
+    {
+      name = "deadnix";
+      description = "Dead code checker used in the Athena dev shell";
+      output = "deadnix";
+      kind = "cli-support";
+    }
+    {
+      name = "yq-go";
+      description = "YAML processor used for safe config editing";
+      output = "yq-go";
+      kind = "cli-support";
+    }
   ];
 
   tools = [
@@ -73,6 +105,30 @@ let
       description = "Task runner for repo entrypoints";
       kind = "cli";
       package = "go-task";
+    }
+    {
+      name = "yq";
+      description = "YAML querying/editing for safe config maintenance";
+      kind = "cli";
+      package = "yq-go";
+    }
+    {
+      name = "nixfmt";
+      description = "Nix formatter";
+      kind = "cli";
+      package = "nixfmt-rfc-style";
+    }
+    {
+      name = "statix";
+      description = "Nix linter";
+      kind = "cli";
+      package = "statix";
+    }
+    {
+      name = "deadnix";
+      description = "Unused Nix code checker";
+      kind = "cli";
+      package = "deadnix";
     }
     {
       name = "athena-activate";

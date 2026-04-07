@@ -160,20 +160,44 @@
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
+          athena = import ./nix/default.nix { inherit pkgs; };
+          lib = nixpkgs.lib;
+          profile = builtins.head (builtins.filter (p: p.name == "athena") athena.profiles);
+          packageByName = builtins.listToAttrs (map (p: {
+            name = p.name;
+            value = p;
+          }) athena.packages);
+          toolByName = builtins.listToAttrs (map (t: {
+            name = t.name;
+            value = t;
+          }) athena.tools);
+          packageRuntime = {
+            workspace-athena = self.packages.${system}.workspace-athena;
+            athena-activate = self.packages.${system}.athena-activate;
+            athena-profile-manifest = self.packages.${system}.athena-profile-manifest;
+            nixfmt-rfc-style = pkgs.nixfmt-rfc-style;
+            statix = pkgs.statix;
+            deadnix = pkgs.deadnix;
+            yq-go = pkgs.yq-go;
+            git = pkgs.git;
+            jq = pkgs.jq;
+            go-task = pkgs.go-task;
+          };
+          resolvePackageName = name:
+            if builtins.hasAttr name packageByName
+            then packageRuntime.${packageByName.${name}.output}
+            else packageRuntime.${name};
+          resolveToolName = name:
+            resolvePackageName toolByName.${name}.package;
+          shellPackages = lib.unique (
+            (map resolvePackageName profile.packages)
+            ++ (map resolveToolName profile.tools)
+          );
         in
         rec {
           athena = pkgs.mkShell {
             name = "athena";
-            packages = with pkgs; [
-              nixfmt-rfc-style
-              statix
-              deadnix
-              jq
-              yq-go
-              go-task
-              git
-              self.packages.${system}.athena-activate
-            ];
+            packages = shellPackages;
 
             shellHook = ''
               echo "Athena devshell ready. Run: athena-activate"
