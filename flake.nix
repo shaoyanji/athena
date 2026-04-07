@@ -55,6 +55,8 @@
             test "$(${pkgs.jq}/bin/jq -r '.workspace.name' "$registry")" = "workspace-athena"
             test "$(${pkgs.jq}/bin/jq -r '.registryVersion' "$registry")" = "1"
             test "$(${pkgs.jq}/bin/jq '.entries | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq '.startupViews | length' "$registry")" -gt 0
+            test "$(${pkgs.jq}/bin/jq -r '.startupViews[0].name' "$registry")" = "bootstrap"
 
             touch "$out"
           '';
