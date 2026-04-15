@@ -15,6 +15,9 @@ let
       description = "Base Athena operator/control-plane profile";
       default = true;
       shell = "athena";
+      profileSource = ./../src;
+      defaultWorkspaceRoot = "/var/lib/nullclaw/workspace";
+      docFiles = [ "AGENTS.md" "SOUL.md" "USER.md" "ATHENA.md" ];
       packages = [
         "workspace-athena"
         "athena-activate"
@@ -39,6 +42,30 @@ let
         "workspace-materialization"
       ];
       startupViews = [ "bootstrap" ];
+    }
+    {
+      name = "hermes";
+      description = "Hermes agent — portable, on-demand AI system process";
+      default = false;
+      shell = "hermes";
+      profileSource = ./../src/hermes;
+      defaultWorkspaceRoot = "/var/lib/hermes/workspace";
+      docFiles = [ "AGENTS.md" "SOUL.md" "HERMES.md" "ENV.md" ];
+      packages = [
+        "workspace-hermes"
+        "hermes-activate"
+        "hermes-profile-manifest"
+      ];
+      tools = [
+        "git"
+        "jq"
+        "task"
+      ];
+      skills = [
+        "workspace-materialization"
+        "skill-import"
+      ];
+      startupViews = [ "bootstrap" "workspace-check" ];
     }
   ];
 
